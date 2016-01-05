@@ -6,13 +6,27 @@
 (defn str->int [str]
   (Integer. str))
 
+
+
 (def conversions {:name identity
                    :glitter-index str->int})
 
-(defn convert [vamp-key value]
+(defn- convert [vamp-key value]
   ((get conversions vamp-key) value))
 
-(defn parse
+
+
+
+(def validations {:name string?
+                 :glitter-index integer?})
+
+(defn- validate [key-validations record]
+  (every? identity (map (fn [key-name] ((get key-validations key-name) (get record key-name))) (keys key-validations))))
+
+
+
+
+(defn- parse
   "Convert a CSV into rows of columns"
   [string]
   (map #(clojure.string/split % #",")
@@ -28,8 +42,49 @@
                  (map vector vamp-keys unmapped-row)))
        rows))
 
+(parse (slurp filename))
+
 (defn glitter-filter [minimum-glitter records]
   (map #(:name %) (filter #(>= (:glitter-index %) minimum-glitter) records)))
 
 
-(glitter-filter 3 (mapify (parse (slurp filename))))
+
+(defn append
+  "Append new suspect to list of suspects"
+  [new-suspect suspect-list]
+  (if (validate validations new-suspect)
+    (conj suspect-list new-suspect)
+    (println "Invalid Format. Please provide suspect name and glitter index value")))
+
+
+(defn stringify
+  "Convert list mapped records to a list of vectors"
+  [mapped-records]
+  (map (fn [mapped-record]
+         (reduce (fn [unmapped-row map-key] (conj unmapped-row (str (get mapped-record map-key))))
+                 []
+                 (keys mapped-record)))
+       mapped-records))
+
+(keys {:name "John" :glitter-index 4})
+
+(defn convert-to-csv [records]
+  (clojure.string/join "\n"
+                       (stringify records)))
+
+
+
+
+
+
+(def current-supsects(mapify (parse (slurp filename))))
+
+(do current-supsects)
+
+(glitter-filter 3 current-supsects)
+
+(append {:name "Luke" :glitter-index 10} current-supsects)
+
+(convert-to-csv current-supsects)
+
+(stringify current-supsects)
