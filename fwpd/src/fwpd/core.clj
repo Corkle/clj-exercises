@@ -58,15 +58,16 @@
 
 
 (defn stringify
-  "Convert list mapped records to a list of vectors"
+  "Convert list mapped records to a list of comma separated string records"
   [mapped-records]
   (map (fn [mapped-record]
-         (reduce (fn [unmapped-row map-key] (conj unmapped-row (str (get mapped-record map-key))))
-                 []
-                 (keys mapped-record)))
+         (clojure.string/join
+           ","
+           (reduce (fn [unmapped-row map-key]
+                     (conj unmapped-row (get mapped-record map-key)))
+                   []
+                   (keys mapped-record))))
        mapped-records))
-
-(keys {:name "John" :glitter-index 4})
 
 (defn convert-to-csv [records]
   (clojure.string/join "\n"
@@ -85,6 +86,5 @@
 
 (append {:name "Luke" :glitter-index 10} current-supsects)
 
-(convert-to-csv current-supsects)
+(convert-to-csv (append {:name "Luke" :glitter-index 10} current-supsects))
 
-(stringify current-supsects)
